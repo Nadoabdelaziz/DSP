@@ -22,8 +22,58 @@ namespace DSPAlgorithms.Algorithms
         {
             Signal InputSignal = LoadSignal(SignalPath);
 
-            //throw new NotImplementedException();
 
+            FIR fir = new FIR();
+            fir.InputFilterType = FILTER_TYPES.BAND_PASS;
+            fir.InputFS = Fs;
+            fir.InputF1 = miniF;
+            fir.InputF2 = maxF;
+            fir.InputStopBandAttenuation = 50;
+            fir.InputTransitionBand = 500;
+            fir.InputTimeDomainSignal = InputSignal;
+            fir.Run();
+            InputSignal = fir.OutputYn;
+
+
+            // niquist rate
+            if (newFs >= 2 * maxF)
+            {
+                Sampling sampling = new Sampling();
+                // gives up/down sampling frequencies
+                sampling.L = L;
+                sampling.M = M;
+
+                sampling.InputSignal = InputSignal;
+                sampling.Run();
+                InputSignal = sampling.OutputSignal;
+            }
+
+
+            DC_Component dc = new DC_Component();
+            dc.InputSignal = InputSignal;
+            dc.Run();
+            InputSignal = dc.OutputSignal;
+
+
+
+            Normalizer normalizer = new Normalizer();
+            normalizer.InputSignal = InputSignal;
+            normalizer.InputMinRange = -1;
+            normalizer.InputMaxRange = 1;
+            normalizer.Run();
+            InputSignal = normalizer.OutputNormalizedSignal;
+
+
+
+
+            DiscreteFourierTransform DFT = new DiscreteFourierTransform();
+            DFT.InputTimeDomainSignal = InputSignal;
+            DFT.InputSamplingFrequency = Fs;
+
+            DFT.Run();
+
+            OutputFreqDomainSignal = DFT.OutputFreqDomainSignal;
+            // throw new NotImplementedException();
         }
 
         public Signal LoadSignal(string filePath)

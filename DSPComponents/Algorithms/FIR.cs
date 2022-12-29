@@ -25,22 +25,27 @@ namespace DSPAlgorithms.Algorithms
             double wd = 0;
             if (stopbandattenuation <= 21)
             {
+                // rectangle
                 wd = 1;
             }
             else if (stopbandattenuation <= 44)
             {
+                // hanning
                 wd = (double)(0.5 + (0.5 * Math.Cos((2 * Math.PI * i / N))));
             }
             else if (InputStopBandAttenuation <= 53)
             {
+                // hamming
                 wd = (double)(0.54 + (0.46 * Math.Cos((2 * Math.PI * i / N))));
             }
             else if (InputStopBandAttenuation <= 74)
             {
+                // black joke
                 wd = (double)(0.42 + (0.5 * (Math.Cos(2 * Math.PI * i / (N - 1)))) + (0.08 * (Math.Cos(4 * Math.PI * i / (N - 1)))));
             }
             return wd;
         }
+
         public int getN(double transition_width, double fs, double stopband)
         {
             double dleta_f = transition_width / fs;
@@ -64,22 +69,35 @@ namespace DSPAlgorithms.Algorithms
 
             int N = (int)Math.Round(number / dleta_f);
             if (N % 2 == 0)
-                N++;//lazem tkon odd
+                N++;
             return N;
 
         }
+
         public override void Run()
         {
             OutputHn = new DSPAlgorithms.DataStructures.Signal(new List<float>(), false, new List<float>(), new List<float>(), new List<float>());
             double hd = 0;
             double wd = 0;
+            
             int N = 0;
             if (InputFilterType == FILTER_TYPES.LOW)
             {
-                double fc_dash = (double)InputCutOffFrequency + (double)(InputTransitionBand / 2);
-                fc_dash = fc_dash / InputFS;
+                double fc_dash;
+                // fc => cuttof freq
+                // input cuttof => given
+                // input cuttof freq given => get cut position (only in low/high pass filters)
+                double fc = (double)InputCutOffFrequency + (double)(InputTransitionBand / 2);
+
+                // divide cutoff freq / sampling freq => get normalization
+                // InputFs = Sampling Freq
+
+                // InputFs => Sampling freq.
+                fc_dash = fc / InputFS;
+
                 double omega = (double)(2 * Math.PI * fc_dash);
-                N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);//l7d hna keda gbna N w fc' ely hn3wd beha flmo3dla
+
+                N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);
 
                 for (int i = 0; i <= N / 2; i++)
                 {
@@ -93,8 +111,9 @@ namespace DSPAlgorithms.Algorithms
                     }
 
                     wd = window(InputStopBandAttenuation, i, N);
-
+                    // impulse response * window val
                     double result = (double)hd * (double)wd;
+                    
                     OutputHn.Samples.Add((float)Math.Round(result, 10));
                     OutputHn.SamplesIndices.Add(i);
 
@@ -105,7 +124,7 @@ namespace DSPAlgorithms.Algorithms
                 double fc_dash = (double)InputCutOffFrequency - (double)(InputTransitionBand / 2);
                 fc_dash = fc_dash / InputFS;
                 double omega = (double)(2 * Math.PI * fc_dash);
-                N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);//l7d hna keda gbna N w fc' ely hn3wd beha flmo3dla
+                N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);
 
                 for (int i = 0; i <= N / 2; i++)
                 {
@@ -128,14 +147,13 @@ namespace DSPAlgorithms.Algorithms
             }
             else if (InputFilterType == FILTER_TYPES.BAND_PASS)
             {
-                double fc_dash1 = (double)InputF1 - (InputTransitionBand / 2);
-                fc_dash1 = fc_dash1 / InputFS;
+                double fc_dash1 = ((double)InputF1 - (InputTransitionBand / 2)) / InputFS;
                 double omega1 = (2 * Math.PI * fc_dash1);
 
-                double fc_dash2 = (double)InputF2 + (InputTransitionBand / 2);
-                fc_dash2 = fc_dash2 / InputFS;
+                double fc_dash2 = ((double)InputF2 + (InputTransitionBand / 2)) / InputFS;
                 double omega2 = (2 * Math.PI * fc_dash2);
-                //N = getN(InputStopBandAttenuation, InputTransitionBand, InputFS);//l7d hna keda gbna N w fc' ely hn3wd beha flmo3dla   .. de 8alt :( el parameters m3kosen
+
+
                 N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);
                 for (int i = 0; i <= N / 2; i++)
                 {
@@ -156,15 +174,12 @@ namespace DSPAlgorithms.Algorithms
             }
             else if (InputFilterType == FILTER_TYPES.BAND_STOP)
             {
-                double fc_dash1 = (double)InputF1 + (InputTransitionBand / 2);
-                fc_dash1 = fc_dash1 / InputFS;
+                double fc_dash1 = ((double)InputF1 + (InputTransitionBand / 2)) / InputFS;
                 double omega1 = (2 * Math.PI * fc_dash1);
 
-                double fc_dash2 = (double)InputF2 - (InputTransitionBand / 2);
-                fc_dash2 = fc_dash2 / InputFS;
+                double fc_dash2 = ((double)InputF2 - (InputTransitionBand / 2)) / InputFS;
                 double omega2 = (2 * Math.PI * fc_dash2);
-                //N = getN(InputStopBandAttenuation, InputTransitionBand, InputFS);  nfs el 8alta el parameters m3kosen 
-                N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);//l7d hna keda gbna N w fc' ely hn3wd beha flmo3dla   
+                N = getN(InputTransitionBand, InputFS, InputStopBandAttenuation);
 
                 for (int i = 0; i <= N / 2; i++)
                 {
@@ -187,6 +202,7 @@ namespace DSPAlgorithms.Algorithms
 
             List<float> sampless = new List<float>();
             List<int> indexxxs = new List<int>();
+
             for (int i = N / 2; i >= 0; i--)
             {
                 if (i != 0)
@@ -198,10 +214,12 @@ namespace DSPAlgorithms.Algorithms
             OutputHn.Samples = sampless.Concat(OutputHn.Samples).ToList();
             OutputHn.SamplesIndices = indexxxs.Concat(OutputHn.SamplesIndices).ToList();
             DirectConvolution conv = new DirectConvolution();
+
+            
             conv.InputSignal1 = InputTimeDomainSignal;
             conv.InputSignal2 = OutputHn;
             conv.Run();
-            OutputYn = new DSPAlgorithms.DataStructures.Signal(new List<float>(), false, new List<float>(), new List<float>(), new List<float>());
+            OutputYn = new Signal(new List<float>(), false, new List<float>(), new List<float>(), new List<float>());
             OutputYn = conv.OutputConvolvedSignal;
         }
         //  throw new NotImplementedException();

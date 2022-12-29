@@ -19,16 +19,23 @@ namespace DSPAlgorithms.Algorithms
 
         public override void Run()
         {
-                 if (M == 0 && L == 0)
+            // L upSampling factor
+            // M DownSampling factor
+
+            // no sampling
+            if (M == 0 && L == 0)
                 {
                     Console.WriteLine("Error......");
 
                 }
+            // if not null => call up sampling function
                 if (M == 0 && L != 0)
                 {
                     Signal upsampledSignal = interpolateSignal();
                     filterSignal(upsampledSignal);
                 }
+                // if not null => call Down sampling function
+
                 if (M != 0 && L == 0)
                 {
                     filterSignal(InputSignal);
@@ -47,8 +54,9 @@ namespace DSPAlgorithms.Algorithms
             }
             private void filterSignal(Signal Input)
             {
+            // call Fir function
                 FIR FIR = new FIR();
-                FIR.InputFilterType = DSPAlgorithms.DataStructures.FILTER_TYPES.LOW;
+                FIR.InputFilterType = FILTER_TYPES.LOW;
                 FIR.InputFS = 8000;
                 FIR.InputStopBandAttenuation = 50;
                 FIR.InputCutOffFrequency = 1500;
@@ -71,6 +79,7 @@ namespace DSPAlgorithms.Algorithms
                     {
                         index += 1;
                         upsampledSignal.SamplesIndices.Add(index);
+                        
                         upsampledSignal.Samples.Add(0);
                     }
                 }
